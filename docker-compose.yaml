@@ -1,0 +1,48 @@
+version: "3"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.9.7-alpine
+    ports:
+      - 5672:5672
+      
+  wsgi:
+    container_name: news_bot_wsgi
+    build: .
+    command: >
+      sh -c "
+            python3 manage.py runscript scripts.setup &&
+            gunicorn -w 4 --bind 0.0.0.0:8000 main.wsgi:application --reload
+            "
+    env_file: .env
+    volumes:
+      - .:/app
+    ports:
+      - 8000:8000
+    depends_on:
+      - rabbitmq
+
+  celery_worker:
+    container_name: news_bot_celery_worker
+    build: .
+    command: celery -A main worker --loglevel=info
+    env_file: .env
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+      - wsgi
+
+  celery_beat:
+    container_name: news_bot_celery_beat
+    restart: on-failure
+    build:
+      context: .
+    command: celery -A main beat -l info
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+      - wsgi
