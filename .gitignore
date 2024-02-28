@@ -1,1 +1,26 @@
+### Django ###
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media
+
+# environment
 .env
+
+# static files
+/static
+
+# directories
+/env
+/__pycache__/
+__pycache__/
+data/
+redisdata/
+
+# don't ignore
+!.env.example
+!.db.env.example
